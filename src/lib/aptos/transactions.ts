@@ -1,33 +1,34 @@
 import { InputTransactionData } from '@aptos-labs/wallet-adapter-react';
-import { FUNCTIONS } from './contracts';
-import type { AccessTier } from '@/types/article';
-import type { SubscriptionTier } from '@/types/subscription';
+import { CONTRACT_ADDRESS, FUNCTIONS } from './contracts';
 
-/**
- * Build publish_issue transaction
- * Called after uploading blob to Shelby — stores blob ID on-chain
- */
-export function buildPublishTx(
-  blobId: string,
-  price: number,
-  accessTier: AccessTier,
-  metadataJson: string
-): InputTransactionData {
+export function buildInitPublicationTx(): InputTransactionData {
   return {
     data: {
-      function: FUNCTIONS.PUBLISH_ISSUE,
-      functionArguments: [blobId, price, accessTier, metadataJson],
+      function: FUNCTIONS.INIT_PUBLICATION,
+      functionArguments: [],
     },
   };
 }
 
-/**
- * Build subscribe transaction
- * Reader pays to access a publication
- */
+export function buildPublishTx(
+  blobId: string,
+  title: string,
+  preview: string,
+  accessTier: string,
+  price: number,
+  tags: string[]
+): InputTransactionData {
+  return {
+    data: {
+      function: FUNCTIONS.PUBLISH_ISSUE,
+      functionArguments: [blobId, title, preview, accessTier, price, tags],
+    },
+  };
+}
+
 export function buildSubscribeTx(
   publicationAddress: string,
-  tier: SubscriptionTier,
+  tier: string,
   amountInOctas: number
 ): InputTransactionData {
   return {
@@ -38,26 +39,6 @@ export function buildSubscribeTx(
   };
 }
 
-/**
- * Build pay-per-issue transaction
- * One-time access purchase for a single article blob
- */
-export function buildPayPerReadTx(
-  blobId: string,
-  amountInOctas: number
-): InputTransactionData {
-  return {
-    data: {
-      function: FUNCTIONS.VERIFY_ACCESS,
-      functionArguments: [blobId, amountInOctas],
-    },
-  };
-}
-
-/**
- * Build withdraw earnings transaction
- * Writer claims accumulated revenue
- */
 export function buildWithdrawTx(): InputTransactionData {
   return {
     data: {

@@ -1,46 +1,46 @@
-import shelbyClient from './client';
-
 export interface ShelbyBlob {
   blobId: string;
   size: number;
   contentType: string;
   createdAt: number;
+  mock?: boolean;
+  warning?: string;
 }
 
 export interface UploadOptions {
   accessTier?: 'public' | 'gated';
   contentType?: string;
+  title?: string;
+  tags?: string[];
   onProgress?: (percent: number) => void;
 }
 
-/**
- * Upload article content to Shelby hot storage.
- * Returns a blob ID to be stored on-chain via Aptos.
- *
- * TODO: Replace with official Shelby SDK when available:
- * import { ShelbySDK } from '@shelby-xyz/sdk'
- * const blob = await ShelbySDK.upload(payload, { apiKey })
- */
 export async function uploadArticleBlob(
   content: string,
   options: UploadOptions = {}
 ): Promise<ShelbyBlob> {
-  const { accessTier = 'gated', contentType = 'application/json' } = options;
+  const { title, tags, onProgress } = options;
 
-  const payload = JSON.stringify({ content, accessTier });
+  onProgress?.(30);
 
-  const response = await fetch(`${shelbyClient.rpcUrl}/v1/blobs`, {
+  const response = await fetch('/api/upload', {
     method: 'POST',
-    headers: {
-      'Content-Type': contentType,
-      Authorization: `Bearer ${shelbyClient.apiKey}`,
-    },
-    body: payload,
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ content, title, tags }),
   });
 
+  onProgress?.(80);
+
   if (!response.ok) {
-    throw new Error(`Shelby upload failed: ${response.statusText}`);
+    throw new Error(`Upload failed: ${response.statusText}`);
   }
 
-  return response.json() as Promise<ShelbyBlob>;
+  const blob = await response.json();
+  onProgress?.(100);
+
+  if (blob.mock) {
+    console.warn('Mock blob ID - Shelby network unavailable:', blob.warning);
+  }
+
+  return blob as ShelbyBlob;
 }

@@ -2,17 +2,15 @@
 
 import { useState } from 'react';
 import { useWallet } from '@aptos-labs/wallet-adapter-react';
+import { Aptos, AptosConfig, Network } from '@aptos-labs/ts-sdk';
 import { ArticleEditor } from '@/components/editor/ArticleEditor';
 import { PublishModal } from '@/components/editor/PublishModal';
 import { ConnectButton } from '@/components/wallet/ConnectButton';
 import { useShelbyUpload } from '@/hooks/useShelbyUpload';
-import { buildPublishTx } from '@/lib/aptos/transactions';
+import { buildInitPublicationTx, buildPublishTx } from '@/lib/aptos/transactions';
+import { CONTRACT_ADDRESS } from '@/lib/aptos/contracts';
 import type { AccessTier } from '@/types/article';
 
-/**
- * Writer publishing page.
- * Flow: Write → Upload to Shelby → Sign Aptos tx → Done
- */
 export default function PublishPage() {
   const { connected, signAndSubmitTransaction, account } = useWallet();
   const { upload, isUploading, progress, error: uploadError } = useShelbyUpload();
@@ -40,23 +38,32 @@ export default function PublishPage() {
     // Step 1: Upload to Shelby
     const blob = await upload(data.content);
     if (!blob) return;
-
     setBlobId(blob.blobId);
 
-    // Step 2: Register on Aptos
+    // Step 2: Check if publication exists, init if not
     try {
-      const metadata = JSON.stringify({
-        title: data.title,
-        preview: data.preview,
-        tags: data.tags,
-        authorAddress: account.address,
-      });
+      const config = new AptosConfig({ network: Network.TESTNET });
+      const aptos = new Aptos(config);
+      const pubExists = await aptos.getAccountResource({
+        accountAddress: account.address,
+        resourceType: `${CONTRACT_ADDRESS}::newsletter::Publication`,
+      }).catch(() => null);
 
+      if (!pubExists) {
+        const initTx = buildInitPublicationTx();
+        await signAndSubmitTransaction(initTx);
+        // Wait a moment for tx to finalize
+        await new Promise(r => setTimeout(r, 2000));
+      }
+
+      // Step 3: Publish issue on-chain
       const tx = buildPublishTx(
         blob.blobId,
-        data.price ? Math.round(data.price * 1e8) : 0,
+        data.title,
+        data.preview || data.content.slice(0, 200),
         data.accessTier,
-        metadata
+        data.price ? Math.round(data.price * 1e8) : 0,
+        data.tags
       );
 
       const result = await signAndSubmitTransaction(tx);
