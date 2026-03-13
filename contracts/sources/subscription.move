@@ -52,7 +52,7 @@ module shelby_newsletter::subscription {
         reader: &signer,
         publication: address,
         tier: String,
-    ) acquires Subscriptions, EarningsVault {
+    ) acquires Subscriptions {
         let reader_addr = signer::address_of(reader);
         let now = timestamp::now_seconds();
 
@@ -99,7 +99,7 @@ module shelby_newsletter::subscription {
         publication: address,
         blob_id: String,
         amount: u64,
-    ) acquires EarningsVault {
+    ) {
         let payment = coin::withdraw<AptosCoin>(reader, amount);
         coin::deposit(publication, payment);
 
@@ -132,6 +132,14 @@ module shelby_newsletter::subscription {
         };
 
         false
+    }
+
+    /// Writer initializes their earnings vault
+    public entry fun init_vault(author: &signer) {
+        let addr = signer::address_of(author);
+        if (!exists<EarningsVault>(addr)) {
+            move_to(author, EarningsVault { balance: 0 });
+        };
     }
 
     /// Writer withdraws accumulated earnings

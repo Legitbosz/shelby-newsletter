@@ -30,7 +30,7 @@ module shelby_newsletter::newsletter {
         tags: vector<String>,
     }
 
-    /// A writer's publication — holds all their issues
+    /// A writer's publication - holds all their issues
     struct Publication has key {
         author: address,
         issues: vector<Issue>,
@@ -39,7 +39,7 @@ module shelby_newsletter::newsletter {
         publish_events: event::EventHandle<PublishEvent>,
     }
 
-    /// Access grant — records that a reader paid for a blob
+    /// Access grant - records that a reader paid for a blob
     struct AccessGrant has key {
         grants: vector<GrantRecord>,
     }
@@ -80,7 +80,7 @@ module shelby_newsletter::newsletter {
         });
     }
 
-    /// Publish a new issue — stores blob_id + metadata on-chain
+    /// Publish a new issue - stores blob_id + metadata on-chain
     public entry fun publish_issue(
         author: &signer,
         blob_id: String,
