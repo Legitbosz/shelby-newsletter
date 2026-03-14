@@ -2,15 +2,10 @@
 
 import { useWallet } from '@aptos-labs/wallet-adapter-react';
 
-/**
- * Wallet connect/disconnect button.
- * Shows truncated address when connected.
- */
 export function ConnectButton() {
   const { account, connected, connect, disconnect, wallets } = useWallet();
 
-  const truncate = (addr: string) =>
-    `${addr.slice(0, 6)}...${addr.slice(-4)}`;
+  const truncate = (addr: string) => `${addr.slice(0, 6)}...${addr.slice(-4)}`;
 
   if (connected && account) {
     return (
@@ -26,7 +21,7 @@ export function ConnectButton() {
 
   return (
     <button
-      onClick={() => connect(wallets[0]?.name)}
+      onClick={() => wallets && wallets.length > 0 ? connect(wallets[0].name) : undefined}
       className="px-4 py-2 rounded-sm border border-pink-500 bg-pink-500/10 text-pink-300 text-sm font-mono hover:bg-pink-500/20 transition-colors"
     >
       Connect Wallet
