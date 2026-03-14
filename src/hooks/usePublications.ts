@@ -21,7 +21,7 @@ export function usePublications(authorAddress: string) {
       try {
         const [result] = await aptosClient.view({
           payload: {
-            function: FUNCTIONS.GET_ALL_ISSUES,
+            function: FUNCTIONS.GET_ALL_ISSUES as `${string}::${string}::${string}`,
             functionArguments: [authorAddress],
           },
         });
