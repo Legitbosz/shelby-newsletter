@@ -1,10 +1,12 @@
 import { InputTransactionData } from '@aptos-labs/wallet-adapter-react';
-import { CONTRACT_ADDRESS, FUNCTIONS } from './contracts';
+import { FUNCTIONS } from './contracts';
+
+type MoveFunction = `${string}::${string}::${string}`;
 
 export function buildInitPublicationTx(): InputTransactionData {
   return {
     data: {
-      function: FUNCTIONS.INIT_PUBLICATION,
+      function: FUNCTIONS.INIT_PUBLICATION as MoveFunction,
       functionArguments: [],
     },
   };
@@ -20,7 +22,7 @@ export function buildPublishTx(
 ): InputTransactionData {
   return {
     data: {
-      function: FUNCTIONS.PUBLISH_ISSUE,
+      function: FUNCTIONS.PUBLISH_ISSUE as MoveFunction,
       functionArguments: [blobId, title, preview, accessTier, price, tags],
     },
   };
@@ -33,7 +35,7 @@ export function buildSubscribeTx(
 ): InputTransactionData {
   return {
     data: {
-      function: FUNCTIONS.SUBSCRIBE,
+      function: FUNCTIONS.SUBSCRIBE as MoveFunction,
       functionArguments: [publicationAddress, tier, amountInOctas],
     },
   };
@@ -42,7 +44,7 @@ export function buildSubscribeTx(
 export function buildWithdrawTx(): InputTransactionData {
   return {
     data: {
-      function: FUNCTIONS.WITHDRAW_EARNINGS,
+      function: FUNCTIONS.WITHDRAW_EARNINGS as MoveFunction,
       functionArguments: [],
     },
   };

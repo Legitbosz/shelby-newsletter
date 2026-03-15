@@ -1,25 +1,33 @@
 'use client';
 
+import { useWallet } from '@aptos-labs/wallet-adapter-react';
 import { usePublications } from '@/hooks/usePublications';
 import { IssueCard } from '@/components/reader/IssueCard';
+import { ConnectButton } from '@/components/wallet/ConnectButton';
 
-interface Props {
-  params: { address: string };
-}
+export const dynamic = 'force-dynamic';
 
-/**
- * Writer profile / publication dashboard.
- * Shows all published issues for a given wallet address.
- */
-export default function ProfilePage({ params }: Props) {
-  const { address } = params;
+export default function ProfilePage() {
+  const { account, connected } = useWallet();
+  const address = account?.address || '';
   const { articles, isLoading, error } = usePublications(address);
 
-  const truncate = (addr: string) => `${addr.slice(0, 8)}...${addr.slice(-6)}`;
+  const truncate = (addr: string) =>
+    addr ? `${addr.slice(0, 8)}...${addr.slice(-6)}` : '';
+
+  if (!connected) {
+    return (
+      <div className="max-w-xl mx-auto px-6 py-32 text-center flex flex-col items-center gap-6">
+        <div className="text-4xl">✍️</div>
+        <h1 className="text-2xl font-bold text-white">Your Profile</h1>
+        <p className="text-white/40 text-sm">Connect your wallet to view your publications.</p>
+        <ConnectButton />
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-3xl mx-auto px-6 py-12">
-      {/* Profile header */}
       <div className="flex items-center gap-4 mb-12 pb-8 border-b border-white/5">
         <div className="w-14 h-14 rounded-full bg-pink-500/10 border border-pink-500/20 flex items-center justify-center text-xl">
           ✍️
@@ -33,18 +41,13 @@ export default function ProfilePage({ params }: Props) {
               {articles.length} issues published
             </span>
             <span className="text-xs text-white/10">·</span>
-            <span className="text-xs text-pink-400/50 font-mono">
-              Shelby writer
-            </span>
+            <span className="text-xs text-pink-400/50 font-mono">Shelby writer</span>
           </div>
         </div>
       </div>
 
-      {/* Issues */}
       <div>
-        <h2 className="text-xs font-mono text-white/30 uppercase tracking-widest mb-4">
-          All Issues
-        </h2>
+        <h2 className="text-xs font-mono text-white/30 uppercase tracking-widest mb-4">All Issues</h2>
 
         {isLoading && (
           <div className="flex items-center gap-3 py-12 text-white/20">
@@ -53,14 +56,10 @@ export default function ProfilePage({ params }: Props) {
           </div>
         )}
 
-        {error && (
-          <div className="text-red-400/60 text-xs font-mono py-8">{error}</div>
-        )}
+        {error && <div className="text-red-400/60 text-xs font-mono py-8">{error}</div>}
 
         {!isLoading && articles.length === 0 && (
-          <div className="text-center py-16 text-white/20 text-sm">
-            No issues published yet.
-          </div>
+          <div className="text-center py-16 text-white/20 text-sm">No issues published yet.</div>
         )}
 
         <div className="flex flex-col gap-2">

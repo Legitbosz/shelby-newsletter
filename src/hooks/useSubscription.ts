@@ -1,14 +1,10 @@
 import { useState, useEffect } from 'react';
 import aptosClient from '@/lib/aptos/client';
-import { FUNCTIONS } from '@/lib/aptos/contracts';
-import { buildSubscribeTx, buildPayPerReadTx } from '@/lib/aptos/transactions';
+import { FUNCTIONS, CONTRACT_ADDRESS } from '@/lib/aptos/contracts';
+import { buildSubscribeTx } from '@/lib/aptos/transactions';
 import { useWallet } from '@aptos-labs/wallet-adapter-react';
 import type { SubscriptionTier } from '@/types/subscription';
 
-/**
- * Hook to check and manage reader subscriptions.
- * Checks on-chain access for a given publication or blob.
- */
 export function useSubscription(publicationAddress: string) {
   const { account, signAndSubmitTransaction } = useWallet();
   const [hasAccess, setHasAccess] = useState(false);
@@ -16,7 +12,6 @@ export function useSubscription(publicationAddress: string) {
   const [isSubscribing, setIsSubscribing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Check subscription status on mount
   useEffect(() => {
     if (!account?.address || !publicationAddress) return;
 
@@ -25,7 +20,7 @@ export function useSubscription(publicationAddress: string) {
       try {
         const [result] = await aptosClient.view({
           payload: {
-            function: FUNCTIONS.CHECK_SUBSCRIPTION,
+            function: FUNCTIONS.CHECK_SUBSCRIPTION as `${string}::${string}::${string}`,
             functionArguments: [account.address, publicationAddress],
           },
         });
@@ -40,15 +35,12 @@ export function useSubscription(publicationAddress: string) {
     checkAccess();
   }, [account?.address, publicationAddress]);
 
-  // Subscribe to a publication
   const subscribe = async (tier: SubscriptionTier, amountInApt: number) => {
     if (!account) return;
     setIsSubscribing(true);
     setError(null);
-
     try {
-      const amountInOctas = amountInApt * 1e8;
-      const tx = buildSubscribeTx(publicationAddress, tier, amountInOctas);
+      const tx = buildSubscribeTx(publicationAddress, tier, amountInApt * 1e8);
       await signAndSubmitTransaction(tx);
       setHasAccess(true);
     } catch (err) {
@@ -58,15 +50,17 @@ export function useSubscription(publicationAddress: string) {
     }
   };
 
-  // Pay per single issue
   const payPerRead = async (blobId: string, amountInApt: number) => {
     if (!account) return;
     setIsSubscribing(true);
     setError(null);
-
     try {
-      const amountInOctas = amountInApt * 1e8;
-      const tx = buildPayPerReadTx(blobId, amountInOctas);
+      const tx = {
+        data: {
+          function: `${CONTRACT_ADDRESS}::subscription::pay_per_read` as `${string}::${string}::${string}`,
+          functionArguments: [publicationAddress, blobId, Math.round(amountInApt * 1e8)],
+        },
+      };
       await signAndSubmitTransaction(tx);
       setHasAccess(true);
     } catch (err) {
@@ -76,12 +70,5 @@ export function useSubscription(publicationAddress: string) {
     }
   };
 
-  return {
-    hasAccess,
-    isChecking,
-    isSubscribing,
-    error,
-    subscribe,
-    payPerRead,
-  };
+  return { hasAccess, isChecking, isSubscribing, error, subscribe, payPerRead };
 }
