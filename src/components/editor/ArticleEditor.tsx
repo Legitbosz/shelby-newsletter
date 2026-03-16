@@ -28,31 +28,13 @@ function isImage(type: string) {
   return type.startsWith('image/');
 }
 
-// Content block types
-type Block =
-  | { id: string; type: 'text'; value: string }
-  | { id: string; type: 'image'; url: string; name: string; caption: string };
-
 function uid() {
   return Math.random().toString(36).slice(2);
 }
 
-// Convert blocks to markdown string for publishing
-function blocksToMarkdown(blocks: Block[]): string {
-  return blocks
-    .map(b => {
-      if (b.type === 'text') return b.value;
-      if (b.type === 'image') return `![${b.caption || b.name}](${b.url})`;
-      return '';
-    })
-    .join('\n\n');
-}
-
 export function ArticleEditor({ onPublish, isPublishing }: ArticleEditorProps) {
   const [title, setTitle] = useState('');
-  const [blocks, setBlocks] = useState<Block[]>([
-    { id: uid(), type: 'text', value: '' },
-  ]);
+  const [content, setContent] = useState('');
   const [tags, setTags] = useState('');
   const [accessTier, setAccessTier] = useState<AccessTier>('paid');
   const [price, setPrice] = useState('1');
@@ -62,23 +44,10 @@ export function ArticleEditor({ onPublish, isPublishing }: ArticleEditorProps) {
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const updateText = (id: string, value: string) => {
-    setBlocks(prev => prev.map(b => b.id === id ? { ...b, value } as Block : b));
-  };
+  const preview = content.slice(0, 200).replace(/[#*`!\[\]]/g, '') + '...';
+  const hasContent = content.trim().length > 0 || attachments.length > 0;
 
-  const updateCaption = (id: string, caption: string) => {
-    setBlocks(prev => prev.map(b => b.id === id ? { ...b, caption } as Block : b));
-  };
-
-  const removeBlock = (id: string) => {
-    setBlocks(prev => {
-      const next = prev.filter(b => b.id !== id);
-      if (next.length === 0) return [{ id: uid(), type: 'text', value: '' }];
-      return next;
-    });
-  };
-
-  const insertImageBlock = useCallback((file: File, afterId?: string) => {
+  const addImage = useCallback((file: File) => {
     setUploading(true);
     const url = URL.createObjectURL(file);
     const media: UploadedMedia = {
@@ -89,25 +58,17 @@ export function ArticleEditor({ onPublish, isPublishing }: ArticleEditorProps) {
       size: file.size,
     };
     setAttachments(prev => [...prev, media]);
-
-    const newImageBlock: Block = { id: uid(), type: 'image', url, name: file.name, caption: '' };
-    const newTextBlock: Block = { id: uid(), type: 'text', value: '' };
-
-    setBlocks(prev => {
-      if (!afterId) {
-        return [...prev, newImageBlock, newTextBlock];
-      }
-      const idx = prev.findIndex(b => b.id === afterId);
-      const next = [...prev];
-      next.splice(idx + 1, 0, newImageBlock, newTextBlock);
-      return next;
-    });
     setUploading(false);
   }, []);
 
+  const removeImage = (blobId: string, url: string) => {
+    URL.revokeObjectURL(url);
+    setAttachments(prev => prev.filter(a => a.blobId !== blobId));
+  };
+
   const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
     Array.from(e.target.files || []).forEach(f => {
-      if (isImage(f.type)) insertImageBlock(f);
+      if (isImage(f.type)) addImage(f);
     });
     e.target.value = '';
   };
@@ -116,30 +77,30 @@ export function ArticleEditor({ onPublish, isPublishing }: ArticleEditorProps) {
     e.preventDefault();
     setDragOver(false);
     Array.from(e.dataTransfer.files).forEach(f => {
-      if (isImage(f.type)) insertImageBlock(f);
+      if (isImage(f.type)) addImage(f);
     });
   };
 
-  const handleTextPaste = useCallback((e: React.ClipboardEvent, blockId: string) => {
+  const handlePaste = useCallback((e: React.ClipboardEvent) => {
     const imageItem = Array.from(e.clipboardData.items).find(i => i.type.startsWith('image/'));
     if (imageItem) {
       const file = imageItem.getAsFile();
-      if (file) {
-        e.preventDefault();
-        insertImageBlock(file, blockId);
-      }
+      if (file) { e.preventDefault(); addImage(file); }
     }
-  }, [insertImageBlock]);
-
-  const content = blocksToMarkdown(blocks);
-  const preview = content.slice(0, 200).replace(/[#*`!\[\]]/g, '') + '...';
-  const hasContent = blocks.some(b => b.type === 'image' || (b.type === 'text' && b.value.trim()));
+  }, [addImage]);
 
   const handlePublish = () => {
     if (!title.trim() || !hasContent) return;
+    const imageMarkdown = attachments
+      .map(a => `![${a.name}](${a.url})`)
+      .join('\n\n');
+    const fullContent = imageMarkdown
+      ? content + (content ? '\n\n' : '') + imageMarkdown
+      : content;
+
     onPublish({
       title: title.trim(),
-      content,
+      content: fullContent,
       preview,
       tags: tags.split(',').map(t => t.trim()).filter(Boolean),
       accessTier,
@@ -181,67 +142,57 @@ export function ArticleEditor({ onPublish, isPublishing }: ArticleEditorProps) {
         />
       </div>
 
-      {/* Editor blocks */}
+      {/* Text editor — clean, no images inside */}
       <div
-        className={'relative flex flex-col gap-1 min-h-[400px] bg-white/5 border border-white/10 rounded p-4 ' + (dragOver ? 'ring-2 ring-pink-500/50' : '')}
+        className={'relative ' + (dragOver ? 'ring-2 ring-pink-500/50 rounded' : '')}
         onDragOver={e => { e.preventDefault(); setDragOver(true); }}
         onDragLeave={() => setDragOver(false)}
         onDrop={handleDrop}
       >
-        {blocks.map((block, idx) => {
-          if (block.type === 'text') {
-            return (
-              <textarea
-                key={block.id}
-                value={block.value}
-                onChange={e => updateText(block.id, e.target.value)}
-                onPaste={e => handleTextPaste(e, block.id)}
-                placeholder={idx === 0 ? 'Write in markdown... paste or drag images directly here' : ''}
-                rows={Math.max(3, (block.value.match(/\n/g) || []).length + 2)}
-                className="w-full bg-transparent text-sm text-white/80 font-mono placeholder:text-white/20 outline-none resize-none leading-relaxed"
-              />
-            );
-          }
-
-          if (block.type === 'image') {
-            return (
-              <div key={block.id} className="relative group my-3">
-                <img
-                  src={block.url}
-                  alt={block.caption || block.name}
-                  className="rounded-lg border border-white/10"
-                  style={{ maxHeight: '160px', maxWidth: '260px', objectFit: 'cover' }}
-                />
-                <input
-                  type="text"
-                  value={block.caption}
-                  onChange={e => updateCaption(block.id, e.target.value)}
-                  placeholder="Add a caption (optional)"
-                  className="w-full mt-1.5 bg-transparent text-xs text-white/30 font-mono placeholder:text-white/15 outline-none border-b border-white/5 focus:border-white/20 pb-1 transition-colors"
-                />
-                <button
-                  onClick={() => {
-                    URL.revokeObjectURL(block.url);
-                    removeBlock(block.id);
-                    setAttachments(prev => prev.filter(a => a.url !== block.url));
-                  }}
-                  className="absolute top-2 right-2 w-7 h-7 rounded-full bg-black/60 text-white/50 hover:text-red-400 hover:bg-black/80 transition-colors opacity-0 group-hover:opacity-100 flex items-center justify-center text-sm"
-                >
-                  ×
-                </button>
-              </div>
-            );
-          }
-
-          return null;
-        })}
-
+        <textarea
+          value={content}
+          onChange={e => setContent(e.target.value)}
+          onPaste={handlePaste}
+          placeholder="Write in markdown... paste or drag images directly here"
+          rows={18}
+          className="w-full bg-white/5 border border-white/10 rounded p-4 text-sm text-white/80 font-mono placeholder:text-white/20 outline-none focus:border-pink-500/30 resize-none transition-colors leading-relaxed"
+        />
         {dragOver && (
           <div className="absolute inset-0 flex items-center justify-center bg-black/60 rounded pointer-events-none">
-            <p className="text-pink-400 font-mono text-sm">Drop image to insert</p>
+            <p className="text-pink-400 font-mono text-sm">Drop image to attach</p>
           </div>
         )}
       </div>
+
+      {/* Image thumbnails — below the editor, small 72x72 */}
+      {attachments.length > 0 && (
+        <div className="flex flex-col gap-2">
+          <p className="text-xs text-white/30 font-mono uppercase tracking-widest">
+            Attached images ({attachments.length})
+          </p>
+          <div className="flex flex-wrap gap-3">
+            {attachments.map(a => (
+              <div key={a.blobId} className="relative group">
+                <img
+                  src={a.url}
+                  alt={a.name}
+                  className="rounded border border-white/10 object-cover"
+                  style={{ width: '72px', height: '72px' }}
+                />
+                <button
+                  onClick={() => removeImage(a.blobId, a.url)}
+                  className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-red-500 text-white text-xs items-center justify-center hidden group-hover:flex"
+                >
+                  ×
+                </button>
+                <p className="text-[10px] text-white/25 font-mono mt-1 max-w-[72px] truncate">
+                  {a.name}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Settings row */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
