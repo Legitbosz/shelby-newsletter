@@ -17,6 +17,7 @@ export default function PublishPage() {
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [blobId, setBlobId] = useState<string | null>(null);
+  const [blobUrl, setBlobUrl] = useState<string | null>(null);
   const [txHash, setTxHash] = useState<string | null>(null);
   const [txError, setTxError] = useState<string | null>(null);
 
@@ -30,30 +31,39 @@ export default function PublishPage() {
   }) => {
     if (!account) return;
 
+    // Open modal IMMEDIATELY so user sees progress right away
     setIsModalOpen(true);
     setBlobId(null);
+    setBlobUrl(null);
     setTxHash(null);
     setTxError(null);
 
-    // Step 1: Upload to Shelby
-    const blob = await upload(data.content);
+    // Step 1: Upload to Shelby (encode → register → RPC upload)
+    const blob = await upload({
+      content: data.content,
+      title: data.title,
+      tags: data.tags,
+    });
     if (!blob) return;
-    setBlobId(blob.blobId);
 
-    // Step 2: Check if publication exists, init if not
+    setBlobId(blob.blobId);
+    if (blob.url) setBlobUrl(blob.url);
+
+    // Step 2: Check if publication exists on-chain, init if not
     try {
       const config = new AptosConfig({ network: Network.TESTNET });
       const aptos = new Aptos(config);
-      const pubExists = await aptos.getAccountResource({
-        accountAddress: account.address,
-        resourceType: `${CONTRACT_ADDRESS}::newsletter::Publication`,
-      }).catch(() => null);
+      const pubExists = await aptos
+        .getAccountResource({
+          accountAddress: account.address.toString(),
+          resourceType: `${CONTRACT_ADDRESS}::newsletter::Publication`,
+        })
+        .catch(() => null);
 
       if (!pubExists) {
         const initTx = buildInitPublicationTx();
         await signAndSubmitTransaction(initTx);
-        // Wait a moment for tx to finalize
-        await new Promise(r => setTimeout(r, 2000));
+        await new Promise((r) => setTimeout(r, 2000));
       }
 
       // Step 3: Publish issue on-chain
@@ -73,6 +83,7 @@ export default function PublishPage() {
     }
   };
 
+  // ── Not connected ──────────────────────────────────────────────────────────
   if (!connected) {
     return (
       <div className="max-w-xl mx-auto px-6 py-32 text-center flex flex-col items-center gap-6">
@@ -86,6 +97,7 @@ export default function PublishPage() {
     );
   }
 
+  // ── Editor ─────────────────────────────────────────────────────────────────
   return (
     <div className="max-w-3xl mx-auto px-6 py-12">
       <div className="mb-8">
@@ -95,16 +107,14 @@ export default function PublishPage() {
         </p>
       </div>
 
-      <ArticleEditor
-        onPublish={handlePublish}
-        isPublishing={isUploading}
-      />
+      <ArticleEditor onPublish={handlePublish} isPublishing={isUploading} />
 
       <PublishModal
         isOpen={isModalOpen}
         isUploading={isUploading}
         uploadProgress={progress}
         blobId={blobId}
+        blobUrl={blobUrl}
         txHash={txHash}
         error={uploadError || txError}
         onClose={() => setIsModalOpen(false)}

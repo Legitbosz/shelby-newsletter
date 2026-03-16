@@ -10,11 +10,15 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@aptos-labs/ts-sdk": "^1.18.0",
-    "@aptos-labs/wallet-adapter-react": "^3.7.0",
+    "@aptos-labs/ts-sdk": "^5.1.1",
+    "@aptos-labs/wallet-adapter-core": "^3.8.0",
+    "@aptos-labs/wallet-adapter-react": "^3.8.0",
+    "@aptos-labs/wallet-standard": "^1.0.0",
+    "@shelby-protocol/sdk": "^0.2.4",
     "@uiw/react-md-editor": "^4.0.4",
     "clsx": "^2.1.0",
     "next": "14.2.0",
+    "petra-plugin-wallet-adapter": "^0.4.5",
     "react": "^18",
     "react-dom": "^18",
     "react-markdown": "^9.0.0",
