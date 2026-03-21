@@ -37,3 +37,4 @@ contracts/.aptos/
 # Misc
 *.tsbuildinfo
 next-env.d.ts
+.blob-cache.json

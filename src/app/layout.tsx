@@ -69,6 +69,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
             {/* Center nav links */}
             <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '40px' }}>
+              <Link href="/read" className="nav-link">Read</Link>
               <Link href="/explore" className="nav-link">Explore</Link>
               <Link href="/publish" className="nav-link">Write</Link>
               <Link href="/profile" className="nav-link">Profile</Link>

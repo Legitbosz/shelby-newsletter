@@ -2,6 +2,11 @@
 const nextConfig = {
   reactStrictMode: false,
   transpilePackages: ['@shelby-protocol/sdk'],
+  experimental: {
+    serverActions: {
+      bodySizeLimit: '100mb',
+    },
+  },
   webpack: (config) => {
     config.resolve.fallback = {
       ...config.resolve.fallback,

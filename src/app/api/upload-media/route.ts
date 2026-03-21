@@ -1,5 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+export const config = {
+  api: {
+    bodyParser: false,
+    responseLimit: false,
+  },
+};
+
 export async function POST(req: NextRequest) {
   try {
     const formData = await req.formData();
@@ -9,9 +16,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'No file provided' }, { status: 400 });
     }
 
-    const maxSize = 10 * 1024 * 1024; // 10MB
+    const maxSize = 100 * 1024 * 1024; // 100MB
     if (file.size > maxSize) {
-      return NextResponse.json({ error: 'File too large (max 10MB)' }, { status: 400 });
+      return NextResponse.json({ error: 'File too large (max 100MB)' }, { status: 400 });
     }
 
     const apiKey = process.env.SHELBY_API_KEY;
