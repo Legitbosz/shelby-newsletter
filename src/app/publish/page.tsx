@@ -343,8 +343,8 @@ export default function PublishPage() {
             onDrop={handleDrop}>
             <textarea ref={textareaRef}
               placeholder="Write your article in markdown... drag & drop or paste images here"
-              value={content} onChange={e => setContent(e.target.value)} onPaste={handlePaste} rows={22}
-              style={{ width: '100%', background: dragOver ? 'rgba(240,88,140,0.04)' : 'var(--surface)', border: dragOver ? '1px solid var(--accent-border)' : '1px solid var(--border)', borderRadius: '3px', padding: '20px', fontSize: '0.95rem', fontFamily: 'var(--font-mono)', color: 'var(--text-2)', outline: 'none', resize: 'none', lineHeight: 1.75, transition: 'all 0.2s' }} />
+              value={content} onChange={e => setContent(e.target.value)} onPaste={handlePaste} rows={12}
+              style={{ width: '100%', background: dragOver ? 'rgba(240,88,140,0.04)' : 'var(--surface)', border: dragOver ? '1px solid var(--accent-border)' : '1px solid var(--border)', borderRadius: '3px', padding: '20px', fontSize: '0.95rem', fontFamily: 'var(--font-mono)', color: 'var(--text-2)', outline: 'none', resize: 'none', lineHeight: 1.75, transition: 'all 0.2s', overflowY: 'auto', maxHeight: '320px' }} />
             {dragOver && (
               <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(240,88,140,0.06)', borderRadius: '3px', pointerEvents: 'none' }}>
                 <p style={{ fontFamily: 'var(--font-mono)', color: 'var(--accent)', fontSize: '0.9rem' }}>Drop to upload</p>

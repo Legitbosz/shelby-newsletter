@@ -75,6 +75,14 @@ export default function ReadPage() {
     } catch {}
   }, [authorAddress]);
 
+  const cleanContent = (text: string) => {
+    // Remove video markdown links from article body (they show in attachments panel)
+    return text
+      .replace(/\[Video: [^\]]+\]\([^)]+\)/g, '')
+      .replace(/\[[\w\s.-]+\.(mp4|webm|mov|avi|mkv)\]\([^)]+\)/gi, '')
+      .trim();
+  };
+
   const fetchContent = async (id: string) => {
     try {
       const res = await fetch('/api/upload', {
@@ -84,7 +92,7 @@ export default function ReadPage() {
       });
       if (res.ok) {
         const data = await res.json();
-        const text = data.content || 'Content blob ID: ' + id;
+        const text = cleanContent(data.content || 'Content blob ID: ' + id);
         setContent(text);
         if (data.attachments?.length) setAttachments(data.attachments);
         const words = text.split(/\s+/).length;
@@ -340,14 +348,11 @@ export default function ReadPage() {
                   </p>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                     {attachments.filter(a => a.type.startsWith('video/')).map((v, i) => (
-                      <div key={i} style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '4px', overflow: 'hidden' }}>
-                        <video controls style={{ width: '100%', maxHeight: '480px', display: 'block', background: '#000' }} preload="metadata">
+                      <div key={i} style={{ borderRadius: '12px', overflow: 'hidden', maxWidth: '500px', border: '1px solid var(--border)' }}>
+                        <video controls style={{ width: '100%', height: 'auto', display: 'block', maxHeight: '280px', objectFit: 'cover' }} preload="metadata">
                           <source src={v.url} type={v.type} />
                           Your browser does not support video playback.
                         </video>
-                        <div style={{ padding: '10px 16px', borderTop: '1px solid var(--border)' }}>
-                          <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.75rem', color: 'var(--text-3)' }}>🎬 {v.name}</span>
-                        </div>
                       </div>
                     ))}
                   </div>
