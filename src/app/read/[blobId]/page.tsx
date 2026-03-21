@@ -7,6 +7,7 @@ import { Aptos, AptosConfig, Network } from '@aptos-labs/ts-sdk';
 import { useWallet } from '@aptos-labs/wallet-adapter-react';
 import { CONTRACT_ADDRESS } from '@/lib/aptos/contracts';
 import { ConnectButton } from '@/components/wallet/ConnectButton';
+import { SocialBar } from '@/components/SocialBar';
 
 interface Issue {
   blob_id: string;
@@ -330,7 +331,8 @@ export default function ReadPage() {
                 __html: '<p style="font-family:var(--font-body);font-size:1.1rem;color:var(--text-2);line-height:1.85;font-weight:300;margin:0 0 20px;">' + renderMarkdown(content) + '</p>'
               }}
             />
-          ) : (
+
+) : (
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '32px 0' }}>
               <div style={{ width: '14px', height: '14px', border: '2px solid var(--accent)', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
               <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.8rem', color: 'var(--text-3)' }}>Loading from Shelby...</span>
@@ -396,8 +398,17 @@ export default function ReadPage() {
             </div>
           )}
 
+          {/* Social interactions */}
+          {issue && (
+            <SocialBar
+              blobId={blobId}
+              authorAddress={authorAddress}
+              articleTitle={issue.title || 'Untitled'}
+            />
+          )}
+
           {/* Article footer */}
-          <div style={{ marginTop: '80px', paddingTop: '32px', borderTop: '1px solid var(--border)' }}>
+          <div style={{ marginTop: '48px', paddingTop: '32px', borderTop: '1px solid var(--border)' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.68rem', color: 'var(--text-4)' }}>Stored on</span>
@@ -411,7 +422,8 @@ export default function ReadPage() {
             </div>
           </div>
         </article>
-      ) : (
+
+) : (
         <div>
           {/* Preview with fade */}
           {issue?.preview && (
@@ -448,7 +460,8 @@ export default function ReadPage() {
                 </p>
                 <ConnectButton />
               </div>
-            ) : (
+
+) : (
               <div style={{ padding: '32px' }}>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', marginBottom: '24px' }}>
 
@@ -514,6 +527,7 @@ export default function ReadPage() {
           </div>
         </div>
       )}
+
     </div>
   );
 }

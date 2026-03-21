@@ -25,7 +25,20 @@ function formatBytes(bytes: number) {
 function isImage(type: string) { return type.startsWith('image/'); }
 function isVideo(type: string) { return type.startsWith('video/'); }
 
-const EMOJIS = ['😀','😂','🔥','💡','🚀','✅','❌','⭐','💰','📰','🎯','💎','🌐','⚡','🔐','📊','🎉','👀','💪','🤝','📌','🔗','💬','🌟','🏆','📈','🎨','🔮','💫','🌍','⚖️','🛡️','🔑','📡','🧠','💻','📱','🎭','✍️','📚'];
+const EMOJI_CATEGORIES = {
+  'Faces': ['😀','😂','🤣','😍','🥰','😎','🤔','😤','🥳','😭','🤯','😱','🤩','😴','🫡','🫠','🥹','😅','😬','🤗'],
+  'Hands': ['👍','👎','👏','🙌','🤝','✌️','🤞','👌','🤌','💪','🫶','🙏','👋','🫂','✍️','🤙','👈','👉','☝️','🫵'],
+  'Hearts': ['❤️','🧡','💛','💚','💙','💜','🖤','🤍','💕','💞','💓','💗','💖','💘','💝','❤️‍🔥','💔','❣️','♥️','🫀'],
+  'Symbols': ['✅','❌','⭐','🔥','💡','⚡','🎯','💰','📊','🏆','🌟','💎','🔐','🛡️','🔑','⚖️','🔮','💫','🌐','📡'],
+  'Objects': ['📰','📚','📌','🔗','💬','📱','💻','🧠','🎨','🎭','🎉','🎊','🎁','📷','🎬','🎵','🎶','📢','📣','🔔'],
+  'Nature': ['🌍','🌈','🌙','⭐','🌊','🔆','🌺','🍀','🦋','🐝','🦁','🐉','🌸','🌴','⛰️','🌋','🌅','❄️','☀️','🌙'],
+  'Food': ['🍕','🍔','🍣','🍜','🍎','🍇','🥑','☕','🍺','🥂','🍾','🎂','🍦','🍩','🥐','🌮','🍱','🥗','🍿','🧁'],
+  'Activity': ['🚀','⚽','🏀','🎮','🎲','♟️','🏋️','🤸','🧘','🏊','🚴','🎯','🎳','🎪','🎠','🎡','🎢','🏄','🧗','🤺'],
+  'Travel': ['🌍','✈️','🚀','🚗','🚢','🏠','🏰','🗼','🗽','🌁','🎡','🏖️','🏔️','🗺️','🧭','🚂','🚁','🛸','⛵','🚀'],
+  'Web3': ['💰','💎','🔐','📊','🌐','⛓️','🏦','💳','🤝','📈','📉','🔑','🛡️','⚖️','🔮','💹','🪙','📡','🧮','🔒'],
+};
+
+const EMOJIS = Object.values(EMOJI_CATEGORIES).flat();
 
 export const dynamic = 'force-dynamic';
 
@@ -236,7 +249,7 @@ export default function PublishPage() {
   return (
     <div style={{ maxWidth: '860px', margin: '0 auto', padding: '48px 32px' }}>
       <div style={{ marginBottom: '32px' }}>
-        <h1 style={{ fontFamily: 'var(--font-display)', fontSize: '2rem', color: 'var(--text)', fontWeight: 700, marginBottom: '6px' }}>New Issue</h1>
+        <h1 style={{ fontFamily: 'var(--font-display)', fontSize: '2rem', color: 'var(--text)', fontWeight: 700, marginBottom: '6px' }}>New Publication</h1>
         <p style={{ fontFamily: 'var(--font-mono)', fontSize: '0.75rem', color: 'var(--text-3)', letterSpacing: '0.05em' }}>
           Stored permanently on Shelby Protocol &middot; Recorded on Aptos
         </p>
@@ -295,14 +308,21 @@ export default function PublishPage() {
               😊
             </button>
             {showEmoji && (
-              <div style={{ position: 'absolute', top: '110%', left: 0, zIndex: 200, background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '4px', padding: '10px', width: '264px', display: 'flex', flexWrap: 'wrap', gap: '2px', boxShadow: '0 8px 32px rgba(0,0,0,0.3)' }}>
-                {EMOJIS.map(e => (
-                  <button key={e} onClick={() => insertEmoji(e)}
-                    style={{ width: '32px', height: '32px', background: 'none', border: 'none', fontSize: '1.1rem', cursor: 'pointer', borderRadius: '3px' }}
-                    onMouseEnter={el => (el.currentTarget as HTMLElement).style.background = 'var(--surface-2)'}
-                    onMouseLeave={el => (el.currentTarget as HTMLElement).style.background = 'none'}>
-                    {e}
-                  </button>
+              <div style={{ position: 'absolute', top: '110%', left: 0, zIndex: 200, background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '4px', boxShadow: '0 8px 32px rgba(0,0,0,0.3)', width: '320px', maxHeight: '360px', overflowY: 'auto' }}>
+                {Object.entries(EMOJI_CATEGORIES).map(([cat, emojis]) => (
+                  <div key={cat} style={{ padding: '8px 10px 4px' }}>
+                    <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.6rem', color: 'var(--text-4)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '4px', paddingBottom: '4px', borderBottom: '1px solid var(--border)' }}>{cat}</div>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1px' }}>
+                      {emojis.map(e => (
+                        <button key={e} onClick={() => insertEmoji(e)}
+                          style={{ width: '30px', height: '30px', background: 'none', border: 'none', fontSize: '1rem', cursor: 'pointer', borderRadius: '3px' }}
+                          onMouseEnter={el => (el.currentTarget as HTMLElement).style.background = 'var(--surface-2)'}
+                          onMouseLeave={el => (el.currentTarget as HTMLElement).style.background = 'none'}>
+                          {e}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
                 ))}
               </div>
             )}
