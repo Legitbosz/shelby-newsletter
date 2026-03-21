@@ -1,124 +1,105 @@
 'use client';
-
 import { useState } from 'react';
-import { useWallet } from '@aptos-labs/wallet-adapter-react';
-import { Aptos, AptosConfig, Network } from '@aptos-labs/ts-sdk';
-import { ArticleEditor } from '@/components/editor/ArticleEditor';
-import { PublishModal } from '@/components/editor/PublishModal';
+import { useWallet } from '@/components/wallet/WalletProvider';
 import { ConnectButton } from '@/components/wallet/ConnectButton';
-import { useShelbyUpload } from '@/hooks/useShelbyUpload';
-import { buildInitPublicationTx, buildPublishTx } from '@/lib/aptos/transactions';
-import { CONTRACT_ADDRESS } from '@/lib/aptos/contracts';
-import type { AccessTier } from '@/types/article';
+import { uploadArticle } from '@/lib/shelby/upload';
+import Link from 'next/link';
 
 export default function PublishPage() {
-  const { connected, signAndSubmitTransaction, account } = useWallet();
-  const { upload, isUploading, progress, error: uploadError } = useShelbyUpload();
+  const { address, connected } = useWallet();
+  const [title, setTitle] = useState('');
+  const [content, setContent] = useState('');
+  const [status, setStatus] = useState('');
+  const [done, setDone] = useState<{ blobName: string; uploaderAddress: string } | null>(null);
 
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [blobId, setBlobId] = useState<string | null>(null);
-  const [blobUrl, setBlobUrl] = useState<string | null>(null);
-  const [txHash, setTxHash] = useState<string | null>(null);
-  const [txError, setTxError] = useState<string | null>(null);
-
-  const handlePublish = async (data: {
-    title: string;
-    content: string;
-    preview: string;
-    tags: string[];
-    accessTier: AccessTier;
-    price?: number;
-  }) => {
-    if (!account) return;
-
-    // Open modal IMMEDIATELY so user sees progress right away
-    setIsModalOpen(true);
-    setBlobId(null);
-    setBlobUrl(null);
-    setTxHash(null);
-    setTxError(null);
-
-    // Step 1: Upload to Shelby (encode → register → RPC upload)
-    const blob = await upload({
-      content: data.content,
-      title: data.title,
-      tags: data.tags,
-    });
-    if (!blob) return;
-
-    setBlobId(blob.blobId);
-    if (blob.url) setBlobUrl(blob.url);
-
-    // Step 2: Check if publication exists on-chain, init if not
-    try {
-      const config = new AptosConfig({ network: Network.TESTNET });
-      const aptos = new Aptos(config);
-      const pubExists = await aptos
-        .getAccountResource({
-          accountAddress: account.address.toString(),
-          resourceType: `${CONTRACT_ADDRESS}::newsletter::Publication`,
-        })
-        .catch(() => null);
-
-      if (!pubExists) {
-        const initTx = buildInitPublicationTx();
-        await signAndSubmitTransaction(initTx);
-        await new Promise((r) => setTimeout(r, 2000));
-      }
-
-      // Step 3: Publish issue on-chain
-      const tx = buildPublishTx(
-        blob.blobId,
-        data.title,
-        data.preview || data.content.slice(0, 200),
-        data.accessTier,
-        data.price ? Math.round(data.price * 1e8) : 0,
-        data.tags
-      );
-
-      const result = await signAndSubmitTransaction(tx);
-      setTxHash(result.hash);
-    } catch (err) {
-      setTxError(err instanceof Error ? err.message : 'Transaction failed');
-    }
-  };
-
-  // ── Not connected ──────────────────────────────────────────────────────────
   if (!connected) {
     return (
-      <div className="max-w-xl mx-auto px-6 py-32 text-center flex flex-col items-center gap-6">
-        <div className="text-4xl">✍️</div>
-        <h1 className="text-2xl font-bold text-white">Ready to write?</h1>
-        <p className="text-white/40 text-sm">
-          Connect your Aptos wallet to start publishing on Shelby.
-        </p>
+      <main className="min-h-screen flex flex-col items-center justify-center gap-6 px-8">
+        <h1 className="text-2xl font-bold">Connect your wallet to publish</h1>
         <ConnectButton />
-      </div>
+      </main>
     );
   }
 
-  // ── Editor ─────────────────────────────────────────────────────────────────
+  async function handlePublish() {
+    if (!title || !content) return;
+    setStatus('Uploading to Shelby...');
+    try {
+      const slug = title.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '').slice(0, 60);
+      const result = await uploadArticle(content, slug);
+      setDone(result);
+      setStatus('');
+    } catch (e: unknown) {
+      setStatus('Error: ' + (e instanceof Error ? e.message : String(e)));
+    }
+  }
+
+  if (done) {
+    return (
+      <main className="min-h-screen flex flex-col items-center justify-center gap-6 px-8 text-center">
+        <div className="text-5xl">✓</div>
+        <h1 className="text-2xl font-bold">Article published!</h1>
+        <div className="text-sm text-zinc-400">
+          <div>Blob: <code className="text-indigo-400 font-mono text-xs">{done.blobName}</code></div>
+          <div>Author: <code className="text-zinc-500 font-mono text-xs">{done.uploaderAddress.slice(0, 16)}…</code></div>
+        </div>
+        <div className="flex gap-3">
+          <Link
+            href={`/read/${encodeURIComponent(done.uploaderAddress)}/${encodeURIComponent(done.blobName)}`}
+            className="px-5 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-sm transition-colors"
+          >
+            Read Article
+          </Link>
+          <button
+            onClick={() => { setTitle(''); setContent(''); setDone(null); }}
+            className="px-5 py-2 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-sm transition-colors"
+          >
+            Write Another
+          </button>
+        </div>
+      </main>
+    );
+  }
+
   return (
-    <div className="max-w-3xl mx-auto px-6 py-12">
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-white mb-1">New Issue</h1>
-        <p className="text-white/30 text-sm font-mono">
-          Your content will be stored permanently on Shelby Protocol
-        </p>
+    <main className="min-h-screen flex flex-col">
+      <nav className="flex items-center justify-between px-8 py-5 border-b border-zinc-800">
+        <Link href="/" className="text-sm text-zinc-400 hover:text-zinc-100">← Back</Link>
+        <span className="text-sm font-medium">New Article</span>
+        <ConnectButton />
+      </nav>
+
+      <div className="flex-1 flex flex-col max-w-4xl mx-auto w-full px-8 py-8 gap-6">
+        <input
+          type="text"
+          placeholder="Article title…"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          className="w-full text-3xl font-bold bg-transparent border-none outline-none placeholder-zinc-700 text-zinc-100"
+        />
+
+        <textarea
+          placeholder="Write your article in Markdown…"
+          value={content}
+          onChange={(e) => setContent(e.target.value)}
+          className="flex-1 min-h-96 w-full bg-zinc-900 border border-zinc-800 rounded-lg p-4 text-sm text-zinc-100 placeholder-zinc-600 outline-none resize-none font-mono leading-relaxed"
+        />
+
+        {status && (
+          <div className="text-indigo-400 text-sm flex items-center gap-2">
+            <span className="inline-block w-3 h-3 border-2 border-indigo-400 border-t-transparent rounded-full animate-spin" />
+            {status}
+          </div>
+        )}
+
+        <button
+          onClick={handlePublish}
+          disabled={!title || !content || !!status}
+          className="self-start px-6 py-2.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 disabled:bg-zinc-700 disabled:text-zinc-500 text-white text-sm font-medium transition-colors"
+        >
+          Publish Article
+        </button>
       </div>
-
-      <ArticleEditor onPublish={handlePublish} isPublishing={isUploading} />
-
-      <PublishModal
-        isOpen={isModalOpen}
-        isUploading={isUploading}
-        uploadProgress={progress}
-        blobId={blobId}
-        blobUrl={blobUrl}
-        txHash={txHash}
-        error={uploadError || txError}
-        onClose={() => setIsModalOpen(false)}
-      />
-    </div>
+    </main>
   );
 }

@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Aptos, AptosConfig, Network } from '@aptos-labs/ts-sdk';
-import { useWallet } from '@aptos-labs/wallet-adapter-react';
+import { useWallet } from '@/components/wallet/WalletProvider';
 import { CONTRACT_ADDRESS } from '@/lib/aptos/contracts';
 import { ConnectButton } from '@/components/wallet/ConnectButton';
 

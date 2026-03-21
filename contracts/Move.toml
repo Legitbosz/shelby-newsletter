@@ -4,7 +4,8 @@ version = "0.1.0"
 authors = []
 
 [addresses]
-shelby_newsletter = "_"
+newsletter = "0x059302e333eb4300c4a9c656bcb848beb05cdcdfe2345c3c159a3aa16ccd591c"
+shelby_newsletter = "0x059302e333eb4300c4a9c656bcb848beb05cdcdfe2345c3c159a3aa16ccd591c"
 
 [dependencies.AptosFramework]
 git = "https://github.com/aptos-labs/aptos-core.git"
