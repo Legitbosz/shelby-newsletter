@@ -1,105 +1,218 @@
 'use client';
+
 import { useState } from 'react';
-import { useWallet } from '@/components/wallet/WalletProvider';
+import { useWallet } from '@aptos-labs/wallet-adapter-react';
+import { Aptos, AptosConfig, Network } from '@aptos-labs/ts-sdk';
 import { ConnectButton } from '@/components/wallet/ConnectButton';
-import { uploadArticle } from '@/lib/shelby/upload';
+import { CONTRACT_ADDRESS, FUNCTIONS } from '@/lib/aptos/contracts';
 import Link from 'next/link';
 
+type AccessTier = 'free' | 'paid';
+
+export const dynamic = 'force-dynamic';
+
 export default function PublishPage() {
-  const { address, connected } = useWallet();
+  const { account, connected, signAndSubmitTransaction } = useWallet();
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
+  const [tags, setTags] = useState('');
+  const [accessTier, setAccessTier] = useState<AccessTier>('paid');
+  const [price, setPrice] = useState('1');
   const [status, setStatus] = useState('');
-  const [done, setDone] = useState<{ blobName: string; uploaderAddress: string } | null>(null);
+  const [txHash, setTxHash] = useState<string | null>(null);
+  const [blobId, setBlobId] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   if (!connected) {
     return (
-      <main className="min-h-screen flex flex-col items-center justify-center gap-6 px-8">
-        <h1 className="text-2xl font-bold">Connect your wallet to publish</h1>
+      <div style={{ maxWidth: '480px', margin: '0 auto', padding: '120px 32px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '24px' }}>
+        <div style={{ fontSize: '3rem' }}>✍️</div>
+        <h1 style={{ fontFamily: 'var(--font-display)', fontSize: '2rem', color: 'var(--text)', fontWeight: 700 }}>Ready to write?</h1>
+        <p style={{ fontFamily: 'var(--font-body)', fontSize: '1rem', color: 'var(--text-3)', fontWeight: 300 }}>Connect your wallet to start publishing on Shelby.</p>
         <ConnectButton />
-      </main>
+      </div>
     );
   }
 
   async function handlePublish() {
-    if (!title || !content) return;
-    setStatus('Uploading to Shelby...');
+    if (!title.trim() || !content.trim() || !account) return;
+    setError(null);
+    setTxHash(null);
+    setBlobId(null);
+
     try {
-      const slug = title.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '').slice(0, 60);
-      const result = await uploadArticle(content, slug);
-      setDone(result);
+      // Step 1: Upload to Shelby
+      setStatus('Uploading to Shelby...');
+      const uploadRes = await fetch('/api/upload', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content, title, tags: tags.split(',').map(t => t.trim()).filter(Boolean) }),
+      });
+      if (!uploadRes.ok) throw new Error('Upload failed');
+      const blob = await uploadRes.json();
+      setBlobId(blob.blobId);
+
+      // Step 2: Init publication if needed
+      setStatus('Checking publication...');
+      const config = new AptosConfig({ network: Network.TESTNET });
+      const aptos = new Aptos(config);
+      const pubExists = await aptos.getAccountResource({
+        accountAddress: account.address,
+        resourceType: `${CONTRACT_ADDRESS}::newsletter::Publication`,
+      }).catch(() => null);
+
+      if (!pubExists) {
+        setStatus('Initializing publication...');
+        await signAndSubmitTransaction({
+          data: {
+            function: FUNCTIONS.INIT_PUBLICATION as `${string}::${string}::${string}`,
+            functionArguments: [],
+          },
+        });
+        await new Promise(r => setTimeout(r, 2000));
+      }
+
+      // Step 3: Publish on-chain
+      setStatus('Publishing on Aptos...');
+      const preview = content.slice(0, 200).replace(/[#*`]/g, '');
+      const result = await signAndSubmitTransaction({
+        data: {
+          function: FUNCTIONS.PUBLISH_ISSUE as `${string}::${string}::${string}`,
+          functionArguments: [
+            blob.blobId,
+            title.trim(),
+            preview,
+            accessTier,
+            accessTier === 'paid' ? Math.round(parseFloat(price) * 1e8) : 0,
+            tags.split(',').map(t => t.trim()).filter(Boolean),
+          ],
+        },
+      });
+      setTxHash((result as any).hash);
       setStatus('');
-    } catch (e: unknown) {
-      setStatus('Error: ' + (e instanceof Error ? e.message : String(e)));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Something went wrong');
+      setStatus('');
     }
   }
 
-  if (done) {
+  if (txHash) {
     return (
-      <main className="min-h-screen flex flex-col items-center justify-center gap-6 px-8 text-center">
-        <div className="text-5xl">✓</div>
-        <h1 className="text-2xl font-bold">Article published!</h1>
-        <div className="text-sm text-zinc-400">
-          <div>Blob: <code className="text-indigo-400 font-mono text-xs">{done.blobName}</code></div>
-          <div>Author: <code className="text-zinc-500 font-mono text-xs">{done.uploaderAddress.slice(0, 16)}…</code></div>
+      <div style={{ maxWidth: '560px', margin: '0 auto', padding: '80px 32px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '24px' }}>
+        <div style={{ fontSize: '3rem' }}>🎉</div>
+        <h1 style={{ fontFamily: 'var(--font-display)', fontSize: '2rem', color: 'var(--text)', fontWeight: 700 }}>Published!</h1>
+        <p style={{ fontFamily: 'var(--font-body)', color: 'var(--text-3)', fontWeight: 300 }}>Your article is live on Shelby Protocol.</p>
+
+        <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '4px', padding: '20px 24px', width: '100%', textAlign: 'left', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          {blobId && (
+            <div>
+              <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.68rem', color: 'var(--text-4)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '4px' }}>Shelby Blob ID</div>
+              <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.75rem', color: 'var(--accent)', wordBreak: 'break-all' }}>{blobId}</div>
+            </div>
+          )}
+          <div>
+            <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.68rem', color: 'var(--text-4)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '4px' }}>Aptos Tx Hash</div>
+            <a href={`https://explorer.aptoslabs.com/txn/${txHash}?network=testnet`} target="_blank" rel="noopener noreferrer"
+              style={{ fontFamily: 'var(--font-mono)', fontSize: '0.75rem', color: 'var(--accent)', wordBreak: 'break-all', textDecoration: 'underline' }}>
+              {txHash}
+            </a>
+          </div>
         </div>
-        <div className="flex gap-3">
-          <Link
-            href={`/read/${encodeURIComponent(done.uploaderAddress)}/${encodeURIComponent(done.blobName)}`}
-            className="px-5 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-sm transition-colors"
-          >
-            Read Article
-          </Link>
-          <button
-            onClick={() => { setTitle(''); setContent(''); setDone(null); }}
-            className="px-5 py-2 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-sm transition-colors"
-          >
-            Write Another
-          </button>
+
+        <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', justifyContent: 'center' }}>
+          <Link href="/explore" className="btn-primary" style={{ fontSize: '0.8rem' }}>View in Explore →</Link>
+          <button onClick={() => { setTitle(''); setContent(''); setTags(''); setTxHash(null); setBlobId(null); }} className="btn-secondary" style={{ fontSize: '0.8rem' }}>Write Another</button>
         </div>
-      </main>
+      </div>
     );
   }
 
   return (
-    <main className="min-h-screen flex flex-col">
-      <nav className="flex items-center justify-between px-8 py-5 border-b border-zinc-800">
-        <Link href="/" className="text-sm text-zinc-400 hover:text-zinc-100">← Back</Link>
-        <span className="text-sm font-medium">New Article</span>
-        <ConnectButton />
-      </nav>
+    <div style={{ maxWidth: '800px', margin: '0 auto', padding: '48px 32px' }}>
+      <div style={{ marginBottom: '32px' }}>
+        <h1 style={{ fontFamily: 'var(--font-display)', fontSize: '2rem', color: 'var(--text)', fontWeight: 700, marginBottom: '6px' }}>New Issue</h1>
+        <p style={{ fontFamily: 'var(--font-mono)', fontSize: '0.75rem', color: 'var(--text-3)', letterSpacing: '0.05em' }}>
+          Your content will be stored on Shelby Protocol
+        </p>
+      </div>
 
-      <div className="flex-1 flex flex-col max-w-4xl mx-auto w-full px-8 py-8 gap-6">
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+        {/* Title */}
         <input
           type="text"
-          placeholder="Article title…"
+          placeholder="Article title..."
           value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          className="w-full text-3xl font-bold bg-transparent border-none outline-none placeholder-zinc-700 text-zinc-100"
+          onChange={e => setTitle(e.target.value)}
+          style={{
+            width: '100%', background: 'transparent', border: 'none',
+            borderBottom: '1px solid var(--border)', paddingBottom: '12px',
+            fontSize: '2rem', fontFamily: 'var(--font-display)', fontWeight: 700,
+            color: 'var(--text)', outline: 'none',
+          }}
         />
 
+        {/* Content */}
         <textarea
-          placeholder="Write your article in Markdown…"
+          placeholder="Write your article in markdown..."
           value={content}
-          onChange={(e) => setContent(e.target.value)}
-          className="flex-1 min-h-96 w-full bg-zinc-900 border border-zinc-800 rounded-lg p-4 text-sm text-zinc-100 placeholder-zinc-600 outline-none resize-none font-mono leading-relaxed"
+          onChange={e => setContent(e.target.value)}
+          rows={20}
+          style={{
+            width: '100%', background: 'var(--surface)', border: '1px solid var(--border)',
+            borderRadius: '3px', padding: '16px', fontSize: '0.95rem',
+            fontFamily: 'var(--font-mono)', color: 'var(--text-2)', outline: 'none',
+            resize: 'none', lineHeight: 1.7,
+          }}
         />
 
-        {status && (
-          <div className="text-indigo-400 text-sm flex items-center gap-2">
-            <span className="inline-block w-3 h-3 border-2 border-indigo-400 border-t-transparent rounded-full animate-spin" />
-            {status}
+        {/* Settings */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            <label style={{ fontFamily: 'var(--font-mono)', fontSize: '0.7rem', color: 'var(--text-4)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>Tags</label>
+            <input type="text" placeholder="defi, web3, aptos" value={tags} onChange={e => setTags(e.target.value)} className="input" />
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            <label style={{ fontFamily: 'var(--font-mono)', fontSize: '0.7rem', color: 'var(--text-4)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>Access</label>
+            <select value={accessTier} onChange={e => setAccessTier(e.target.value as AccessTier)} className="input" style={{ cursor: 'pointer' }}>
+              <option value="free">Free</option>
+              <option value="paid">Paid</option>
+            </select>
+          </div>
+          {accessTier === 'paid' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <label style={{ fontFamily: 'var(--font-mono)', fontSize: '0.7rem', color: 'var(--text-4)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>Price (APT)</label>
+              <input type="number" min="0.1" step="0.1" value={price} onChange={e => setPrice(e.target.value)} className="input" />
+            </div>
+          )}
+        </div>
+
+        {/* Error */}
+        {error && (
+          <div style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: '3px', padding: '12px 16px' }}>
+            <p style={{ fontFamily: 'var(--font-mono)', fontSize: '0.8rem', color: '#ef4444' }}>{error}</p>
           </div>
         )}
 
-        <button
-          onClick={handlePublish}
-          disabled={!title || !content || !!status}
-          className="self-start px-6 py-2.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 disabled:bg-zinc-700 disabled:text-zinc-500 text-white text-sm font-medium transition-colors"
-        >
-          Publish Article
-        </button>
+        {/* Status */}
+        {status && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <div style={{ width: '14px', height: '14px', border: '2px solid var(--accent)', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+            <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.8rem', color: 'var(--text-3)' }}>{status}</span>
+          </div>
+        )}
+
+        {/* Publish button */}
+        <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+          <button
+            onClick={handlePublish}
+            disabled={!title.trim() || !content.trim() || !!status}
+            className="btn-primary"
+            style={{ fontSize: '0.85rem' }}
+          >
+            {status ? 'Publishing...' : 'Publish to Shelby →'}
+          </button>
+        </div>
       </div>
-    </main>
+    </div>
   );
 }
