@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Aptos, AptosConfig, Network } from '@aptos-labs/ts-sdk';
 import { useWallet } from '@aptos-labs/wallet-adapter-react';
+import { useAnsName } from '@/hooks/useAnsName';
 import { CONTRACT_ADDRESS } from '@/lib/aptos/contracts';
 
 interface Issue {
@@ -28,6 +29,17 @@ function timeAgo(unixSeconds: number) {
   if (diff < 3600) return Math.floor(diff / 60) + 'm ago';
   if (diff < 86400) return Math.floor(diff / 3600) + 'h ago';
   return new Date(unixSeconds * 1000).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
+function getAuthorName(addr: string): string {
+  try {
+    const stored = localStorage.getItem(`profile-${addr}`);
+    if (stored) {
+      const profile = JSON.parse(stored);
+      if (profile?.displayName) return profile.displayName;
+    }
+  } catch {}
+  return addr.slice(0, 6) + '...' + addr.slice(-4);
 }
 
 function shortAddr(addr: string) {
@@ -219,7 +231,7 @@ export default function ReaderFeedPage() {
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                     <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.7rem', color: 'var(--text-4)' }}>
-                      {shortAddr(article.authorAddress)}
+                      {getAuthorName(article.authorAddress)}
                     </span>
                     {parseInt(article.published_at) > 0 && (
                       <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.7rem', color: 'var(--text-4)' }}>

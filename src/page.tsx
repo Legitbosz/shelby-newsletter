@@ -24,10 +24,10 @@ export default function HomePage() {
           </span>
         </div>
 
-        <h1 style={{ fontFamily: 'var(--font-display)', fontWeight: 900, fontSize: 'clamp(2.2rem, 5vw, 4rem)', lineHeight: 1.0, color: 'var(--text)', marginBottom: '4px', letterSpacing: '-0.03em' }}>
+        <h1 style={{ fontFamily: 'var(--font-display)', fontWeight: 900, fontSize: 'clamp(1.8rem, 4vw, 3rem)', lineHeight: 1.0, color: 'var(--text)', marginBottom: '4px', letterSpacing: '-0.03em' }}>
           Write once.
         </h1>
-        <h1 style={{ fontFamily: 'var(--font-display)', fontStyle: 'italic', fontWeight: 700, fontSize: 'clamp(2.2rem, 5vw, 4rem)', lineHeight: 1.0, color: 'var(--accent)', marginBottom: '44px', letterSpacing: '-0.03em' }}>
+        <h1 style={{ fontFamily: 'var(--font-display)', fontStyle: 'italic', fontWeight: 700, fontSize: 'clamp(1.8rem, 4vw, 3rem)', lineHeight: 1.0, color: 'var(--accent)', marginBottom: '44px', letterSpacing: '-0.03em' }}>
           Own forever.
         </h1>
 
@@ -62,7 +62,7 @@ export default function HomePage() {
 
       {/* HOW IT WORKS */}
       <section style={{ padding: '96px 48px', maxWidth: '1100px', margin: '0 auto' }}>
-        <div style={{ marginBottom: '52px' }}>
+        <div style={{ marginBottom: '52px', textAlign: 'center' }}>
           <p style={{ fontFamily: 'var(--font-mono)', fontSize: '1.6rem', color: 'var(--accent)', letterSpacing: '0.15em', textTransform: 'uppercase', marginBottom: '12px' }}>How it works</p>
           <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(1.5rem, 3vw, 2rem)', color: 'var(--text)', fontWeight: 700 }}>Three steps to sovereignty</h2>
         </div>
@@ -86,7 +86,7 @@ export default function HomePage() {
 
       {/* FEATURES */}
       <section style={{ padding: '96px 48px', maxWidth: '1100px', margin: '0 auto' }}>
-        <div style={{ marginBottom: '52px' }}>
+        <div style={{ marginBottom: '52px', textAlign: 'center' }}>
           <p style={{ fontFamily: 'var(--font-mono)', fontSize: '1.6rem', color: 'var(--accent)', letterSpacing: '0.15em', textTransform: 'uppercase', marginBottom: '12px' }}>Features</p>
           <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(1.5rem, 3vw, 2rem)', color: 'var(--text)', fontWeight: 700 }}>Everything you need, nothing you don't</h2>
         </div>
