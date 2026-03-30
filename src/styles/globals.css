@@ -257,10 +257,16 @@ h1, h2, h3 { font-family: var(--font-display); font-weight: 700; }
   --text-2: #111111;
   --text-3: #3d3d3d;
   --text-4: #6b6b6b;
-  --accent: #e8005a;
-  --accent-2: #c4004d;
+  --accent: #cc0044;
+  --accent-2: #aa0038;
   --accent-dim: rgba(232,0,90,0.07);
   --accent-border: rgba(232,0,90,0.28);
+}
+
+[data-theme="light"] p[style*="var(--accent)"],
+[data-theme="light"] span[style*="var(--accent)"],
+[data-theme="light"] div[style*="var(--accent)"] {
+  font-weight: 700 !important;
 }
 
 [data-theme="light"] body {
@@ -327,6 +333,17 @@ h1, h2, h3 { font-family: var(--font-display); font-weight: 700; }
 [data-theme="light"] .top-ticker { background: #111111 !important; }
 [data-theme="light"] .top-ticker span { color: rgba(255,255,255,0.6) !important; }
 [data-theme="light"] .top-ticker .ticker-accent { color: #ff3080 !important; }
+[data-theme="light"] [style*="color: 'var(--accent)'"],
+[data-theme="light"] [style*='color: var(--accent)'] {
+  color: #c0003e !important;
+  font-weight: 700 !important;
+}
+
+[data-theme="light"] .tag-accent {
+  color: #c0003e !important;
+  font-weight: 700 !important;
+}
+
 [data-theme="light"] .main-nav {
   background: rgba(250,249,247,0.96) !important;
   border-bottom: 1px solid var(--border) !important;

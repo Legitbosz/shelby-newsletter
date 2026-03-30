@@ -63,7 +63,7 @@ export default function HomePage() {
       {/* HOW IT WORKS */}
       <section style={{ padding: '96px 48px', maxWidth: '1100px', margin: '0 auto' }}>
         <div style={{ marginBottom: '52px', textAlign: 'center' }}>
-          <p style={{ fontFamily: 'var(--font-mono)', fontSize: '1.6rem', color: 'var(--accent)', letterSpacing: '0.15em', textTransform: 'uppercase', marginBottom: '12px' }}>How it works</p>
+          <p style={{ fontFamily: 'var(--font-mono)', fontSize: '1rem', color: 'var(--accent)', letterSpacing: '0.15em', textTransform: 'uppercase', marginBottom: '12px', fontWeight: 700 }}>How it works</p>
           <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(1.5rem, 3vw, 2rem)', color: 'var(--text)', fontWeight: 700 }}>Three steps to sovereignty</h2>
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '24px' }}>
@@ -73,7 +73,7 @@ export default function HomePage() {
             { n: '03', icon: '💸', title: 'Earn', body: 'Set your price. Readers pay on-chain. Revenue flows directly to your wallet — instantly, with zero platform fee.' },
           ].map(step => (
             <div key={step.n} style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '4px', padding: '48px 36px', position: 'relative' }}>
-              <div style={{ position: 'absolute', top: '28px', right: '28px', fontFamily: 'var(--font-mono)', fontSize: '1rem', color: 'var(--accent)', opacity: 0.4 }}>{step.n}</div>
+              <div style={{ position: 'absolute', top: '28px', right: '28px', fontFamily: 'var(--font-mono)', fontSize: '1.1rem', color: 'var(--accent)', opacity: 1, fontWeight: 700 }}>{step.n}</div>
               <div style={{ fontSize: '2.8rem', marginBottom: '24px' }}>{step.icon}</div>
               <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '2rem', color: 'var(--text)', marginBottom: '16px', fontWeight: 700 }}>{step.title}</h3>
               <p style={{ fontFamily: 'var(--font-body)', fontSize: '1.05rem', color: 'var(--text-2)', lineHeight: 1.8, fontWeight: 300 }}>{step.body}</p>
@@ -87,7 +87,7 @@ export default function HomePage() {
       {/* FEATURES */}
       <section style={{ padding: '96px 48px', maxWidth: '1100px', margin: '0 auto' }}>
         <div style={{ marginBottom: '52px', textAlign: 'center' }}>
-          <p style={{ fontFamily: 'var(--font-mono)', fontSize: '1.6rem', color: 'var(--accent)', letterSpacing: '0.15em', textTransform: 'uppercase', marginBottom: '12px' }}>Features</p>
+          <p style={{ fontFamily: 'var(--font-mono)', fontSize: '1rem', color: 'var(--accent)', letterSpacing: '0.15em', textTransform: 'uppercase', marginBottom: '12px', fontWeight: 700 }}>Features</p>
           <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(1.5rem, 3vw, 2rem)', color: 'var(--text)', fontWeight: 700 }}>Everything you need, nothing you don't</h2>
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px' }}>
