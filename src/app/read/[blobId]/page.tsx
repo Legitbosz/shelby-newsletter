@@ -231,13 +231,13 @@ export default function ReadPage() {
               {issue.access_tier === 'free' ? 'Free' : parseInt(issue.price) > 0 ? (parseInt(issue.price) / 1e8).toFixed(2) + ' APT' : 'Paid'}
             </span>
             <span style={{ color: 'var(--border-hover)', fontSize: '0.8rem' }}>·</span>
-            <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.72rem', color: 'var(--text-4)' }}>
+            <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.85rem', color: 'var(--text-3)' }}>
               Issue #{issue.issue_number}
             </span>
             {parseInt(issue.published_at) > 0 && (
               <>
                 <span style={{ color: 'var(--border-hover)', fontSize: '0.8rem' }}>·</span>
-                <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.72rem', color: 'var(--text-4)' }}>
+                <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.85rem', color: 'var(--text-3)' }}>
                   {timeAgo(parseInt(issue.published_at))}
                 </span>
               </>
@@ -245,7 +245,7 @@ export default function ReadPage() {
             {estimatedReadTime > 0 && (
               <>
                 <span style={{ color: 'var(--border-hover)', fontSize: '0.8rem' }}>·</span>
-                <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.72rem', color: 'var(--text-4)' }}>
+                <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.85rem', color: 'var(--text-3)' }}>
                   {estimatedReadTime} min read
                 </span>
               </>
@@ -255,7 +255,7 @@ export default function ReadPage() {
           {/* Title */}
           <h1 style={{
             fontFamily: 'var(--font-display)',
-            fontSize: 'clamp(2rem, 5vw, 3.2rem)',
+            fontSize: 'clamp(1.4rem, 2.5vw, 1.9rem)',
             fontWeight: 900,
             color: 'var(--text)',
             lineHeight: 1.15,
@@ -280,20 +280,20 @@ export default function ReadPage() {
                 ) : authorAddress.slice(2, 3).toUpperCase()}
               </div>
               <div>
-                <div style={{ fontFamily: 'var(--font-body)', fontSize: '0.95rem', color: 'var(--text-2)', fontWeight: 500 }}>
+                <div style={{ fontFamily: 'var(--font-body)', fontSize: '1.05rem', color: 'var(--text)', fontWeight: 600 }}>
                   {authorProfile?.displayName || authorAddress.slice(0, 8) + '...' + authorAddress.slice(-6)}
                 </div>
                 <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginTop: '2px' }}>
-                  <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.65rem', color: 'var(--text-4)' }}>Author</span>
+                  <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.8rem', color: 'var(--text-3)' }}>Author</span>
                   {authorProfile?.twitter && (
                     <a href={'https://twitter.com/' + authorProfile.twitter.replace('@','')} target="_blank" rel="noopener noreferrer"
-                      style={{ fontFamily: 'var(--font-mono)', fontSize: '0.65rem', color: 'var(--accent)', textDecoration: 'none' }}>
+                      style={{ fontFamily: 'var(--font-mono)', fontSize: '0.82rem', color: 'var(--accent)', textDecoration: 'none' }}>
                       𝕏 @{authorProfile.twitter.replace('@','')}
                     </a>
                   )}
                   {authorProfile?.website && (
                     <a href={authorProfile.website} target="_blank" rel="noopener noreferrer"
-                      style={{ fontFamily: 'var(--font-mono)', fontSize: '0.65rem', color: 'var(--accent)', textDecoration: 'none' }}>
+                      style={{ fontFamily: 'var(--font-mono)', fontSize: '0.82rem', color: 'var(--accent)', textDecoration: 'none' }}>
                       🌐 Website
                     </a>
                   )}
@@ -411,12 +411,12 @@ export default function ReadPage() {
           <div style={{ marginTop: '48px', paddingTop: '32px', borderTop: '1px solid var(--border)' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.68rem', color: 'var(--text-4)' }}>Stored on</span>
-                <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.68rem', color: 'var(--accent)', opacity: 0.6 }}>Shelby Protocol</span>
+                <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.82rem', color: 'var(--text-3)' }}>Stored on</span>
+                <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.82rem', color: 'var(--accent)', opacity: 0.9 }}>Shelby Protocol</span>
                 <span style={{ color: 'var(--text-4)', fontSize: '0.7rem' }}>·</span>
-                <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.68rem', color: 'var(--text-4)', maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{blobId}</span>
+                <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.78rem', color: 'var(--text-3)', maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{blobId}</span>
               </div>
-              <Link href="/explore" style={{ fontFamily: 'var(--font-mono)', fontSize: '0.72rem', color: 'var(--accent)', textDecoration: 'none', letterSpacing: '0.06em' }}>
+              <Link href="/explore" style={{ fontFamily: 'var(--font-mono)', fontSize: '0.85rem', color: 'var(--accent)', textDecoration: 'none', letterSpacing: '0.06em' }}>
                 More articles &rarr;
               </Link>
             </div>

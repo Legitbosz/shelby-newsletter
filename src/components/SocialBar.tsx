@@ -216,7 +216,7 @@ export function SocialBar({ blobId, authorAddress, articleTitle }: SocialBarProp
     display: 'flex' as const, alignItems: 'center' as const, gap: '6px',
     padding: '8px 14px', background: 'none', border: '1px solid var(--border)',
     borderRadius: '20px', cursor: 'pointer', fontFamily: 'var(--font-mono)',
-    fontSize: '0.75rem', color: 'var(--text-3)', transition: 'all 0.2s',
+    fontSize: '0.9rem', color: 'var(--text-3)', transition: 'all 0.2s',
   };
 
   const CommentInput = ({ isReply = false, placeholder = 'Write a comment...' }: { isReply?: boolean; placeholder?: string }) => (
@@ -302,27 +302,27 @@ export function SocialBar({ blobId, authorAddress, articleTitle }: SocialBarProp
               {profile?.avatar ? <img src={profile.avatar} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : comment.author.slice(2, 3).toUpperCase()}
             </div>
             <div>
-              <span style={{ fontFamily: 'var(--font-body)', fontSize: '0.85rem', color: 'var(--text-2)', fontWeight: 500 }}>
+              <span style={{ fontFamily: 'var(--font-body)', fontSize: '0.95rem', color: 'var(--text-2)', fontWeight: 600 }}>
                 {profile?.displayName || shortAddr(comment.author)}
               </span>
-              <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.65rem', color: 'var(--text-4)', marginLeft: '8px' }}>
+              <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.78rem', color: 'var(--text-3)', marginLeft: '8px' }}>
                 {timeAgo(comment.createdAt)}
               </span>
             </div>
           </div>
 
           {/* Content */}
-          <p style={{ fontFamily: 'var(--font-body)', fontSize: '0.9rem', color: 'var(--text-2)', lineHeight: 1.65, fontWeight: 300 }}>
+          <p style={{ fontFamily: 'var(--font-body)', fontSize: '1rem', color: 'var(--text-2)', lineHeight: 1.7, fontWeight: 300 }}>
             {comment.content}
           </p>
 
           {/* Actions */}
           <div style={{ display: 'flex', gap: '12px', marginTop: '10px' }}>
-            <button onClick={() => likeComment(comment.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'var(--font-mono)', fontSize: '0.7rem', color: 'var(--text-4)', display: 'flex', alignItems: 'center', gap: '4px', padding: 0 }}>
+            <button onClick={() => likeComment(comment.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'var(--font-mono)', fontSize: '0.82rem', color: 'var(--text-3)', display: 'flex', alignItems: 'center', gap: '4px', padding: 0 }}>
               ❤️ {comment.likes > 0 && comment.likes}
             </button>
             {addr && depth === 0 && (
-              <button onClick={() => { setReplyTo(comment); setCommentText(''); }} style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'var(--font-mono)', fontSize: '0.7rem', color: 'var(--text-4)', padding: 0 }}>
+              <button onClick={() => { setReplyTo(comment); setCommentText(''); }} style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'var(--font-mono)', fontSize: '0.82rem', color: 'var(--text-3)', padding: 0 }}>
                 Reply
               </button>
             )}
