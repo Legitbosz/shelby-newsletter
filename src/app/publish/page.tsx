@@ -179,7 +179,13 @@ export default function PublishPage() {
       }
 
       setStatus('Publishing on Aptos...');
-      const preview = content.slice(0, 200).replace(/[#*`\[\]!~]/g, '').trim();
+      const preview = content
+        .replace(/!\[([^\]]*)\]\([^)]+\)/g, '')   // strip image markdown completely
+        .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')  // links → just the text
+        .replace(/[#*`!~>\-]/g, '')               // strip markdown symbols
+        .replace(/\s+/g, ' ')                     // collapse whitespace
+        .trim()
+        .slice(0, 200);
       const result = await signAndSubmitTransaction({
         data: {
           function: FUNCTIONS.PUBLISH_ISSUE as `${string}::${string}::${string}`,
